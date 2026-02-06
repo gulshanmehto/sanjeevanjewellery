@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, Form, Header
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -15,12 +15,14 @@ from datetime import datetime, timezone
 import base64
 import asyncio
 from passlib.context import CryptContext
+from pymongo import ReturnDocument
 
 # Import middleware
 from middleware import add_security_headers, limiter
 
 # Import super-resolution pipeline
 from services.super_resolution import upscale_base64_image, get_superresolution_pipeline
+from services.s3_storage import S3Storage
 
 ROOT_DIR = Path(__file__).parent
 
@@ -66,6 +68,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# S3 storage (optional)
+try:
+    s3_storage = S3Storage.from_env()
+except Exception as s3_error:
+    s3_storage = None
+    logger.warning(f"S3 storage not configured: {s3_error}")
+
+SIGNED_URL_TTL = int(os.environ.get("AWS_S3_SIGNED_URL_TTL", "3600"))
+
 # ============== MODELS ==============
 
 class StatusCheck(BaseModel):
@@ -88,6 +99,8 @@ class GenerationResponse(BaseModel):
     status: str
     generated_image: Optional[str] = None
     image: Optional[str] = None
+    job_id: Optional[str] = None
+    output_url: Optional[str] = None
     message: Optional[str] = None
 
 class VideoGenerationResponse(BaseModel):
@@ -95,6 +108,12 @@ class VideoGenerationResponse(BaseModel):
     status: str
     video_url: Optional[str] = None
     message: Optional[str] = None
+
+class JobCompleteRequest(BaseModel):
+    output_s3_key: str
+
+class JobFailRequest(BaseModel):
+    error: str
 
 class UserCredits(BaseModel):
     email: str
@@ -313,43 +332,96 @@ async def generate_jewellery_photo(
         
         if response:
             generation_id = str(uuid.uuid4())
-            
-            # Extract generated image data
-            # Gemini-3-pro-image-preview returns the image in the response parts
-            generated_image_data = None
+
+            # Extract generated image data (bytes + base64)
+            generated_image_bytes = None
             if hasattr(response, 'candidates') and response.candidates:
                 for part in response.candidates[0].content.parts:
                     if hasattr(part, 'inline_data'):
-                        generated_image_data = base64.b64encode(part.inline_data.data).decode('utf-8')
+                        generated_image_bytes = part.inline_data.data
                         break
-            
-            # If no image was generated, return a failure instead of echoing input
-            if not generated_image_data:
+
+            if not generated_image_bytes:
                 raise HTTPException(
                     status_code=500,
                     detail="Model did not return an image. Please try again or use a supported image-capable model."
                 )
-            
-            # ============== SUPER-RESOLUTION UPSCALING ==============
-            # Apply 4x super-resolution using Real-ESRGAN for catalog-grade quality
-            logger.info("Applying super-resolution 4x upscaling...")
-            try:
-                # Convert base64 to bytes, upscale, and convert back
-                upscaled_image_data = upscale_base64_image(
-                    f"data:image/png;base64,{generated_image_data}"
+
+            generated_image_b64 = base64.b64encode(generated_image_bytes).decode('utf-8')
+
+            # If S3 is configured, enqueue a GPU job and return job_id
+            if s3_storage:
+                job_id = str(uuid.uuid4())
+
+                original_ext = "png"
+                if image.filename and "." in image.filename:
+                    original_ext = image.filename.rsplit(".", 1)[-1].lower()
+
+                original_key = f"jobs/{job_id}/original.{original_ext}"
+                generated_key = f"jobs/{job_id}/generated.png"
+                output_key = f"jobs/{job_id}/output.png"
+
+                s3_storage.upload_bytes(
+                    original_key,
+                    image_data,
+                    content_type=image.content_type or "image/png"
                 )
-                # Remove data URI prefix to get clean base64
+                s3_storage.upload_bytes(
+                    generated_key,
+                    generated_image_bytes,
+                    content_type="image/png"
+                )
+
+                job_record = {
+                    "job_id": job_id,
+                    "generation_id": generation_id,
+                    "status": "queued",
+                    "input_s3_key": generated_key,
+                    "output_s3_key": output_key,
+                    "original_s3_key": original_key,
+                    "preset_name": preset_name,
+                    "aspect_ratio": aspect_ratio,
+                    "aspect_ratio_label": aspect_ratio_label,
+                    "aspect_ratio_dimensions": aspect_ratio_dimensions,
+                    "email": email,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.jobs.insert_one(job_record)
+
+                generation_record = {
+                    "id": generation_id,
+                    "job_id": job_id,
+                    "jewellery_type": jewellery_type,
+                    "shoot_type": shoot_type,
+                    "preset_name": preset_name,
+                    "aspect_ratio": aspect_ratio,
+                    "aspect_ratio_label": aspect_ratio_label,
+                    "aspect_ratio_dimensions": aspect_ratio_dimensions,
+                    "email": email,
+                    "status": "processing",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.generations.insert_one(generation_record)
+
+                return GenerationResponse(
+                    id=generation_id,
+                    status="processing",
+                    job_id=job_id,
+                    message="Image queued for GPU upscaling"
+                )
+
+            # Fallback: inline super-resolution (no S3 configured)
+            logger.info("S3 not configured, applying inline super-resolution...")
+            try:
+                upscaled_image_data = upscale_base64_image(
+                    f"data:image/png;base64,{generated_image_b64}"
+                )
                 if upscaled_image_data.startswith('data:image'):
                     upscaled_image_data = upscaled_image_data.split(',')[1]
-                
-                logger.info("Super-resolution complete. Image upscaled 4x with natural quality.")
-                generated_image_data = upscaled_image_data  # Use upscaled version
+                generated_image_b64 = upscaled_image_data
             except Exception as sr_error:
                 logger.warning(f"Super-resolution failed, using original: {str(sr_error)}")
-                # Fall back to original if super-resolution fails
-                pass
-            
-            # Store generation metadata only (avoid large base64 images in MongoDB)
+
             generation_record = {
                 "id": generation_id,
                 "jewellery_type": jewellery_type,
@@ -363,12 +435,12 @@ async def generate_jewellery_photo(
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             await db.generations.insert_one(generation_record)
-            
+
             return GenerationResponse(
                 id=generation_id,
                 status="completed",
-                generated_image=f"data:image/png;base64,{generated_image_data}",
-                image=f"data:image/png;base64,{generated_image_data}",
+                generated_image=f"data:image/png;base64,{generated_image_b64}",
+                image=f"data:image/png;base64,{generated_image_b64}",
                 message="Jewellery photoshoot generated successfully!"
             )
         
@@ -401,6 +473,107 @@ async def generate_video_from_image(
     except Exception as e:
         logger.error(f"Video generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Video generation failed: {str(e)}")
+
+# ============== GPU JOB QUEUE API ==============
+
+@api_router.post("/jobs/next")
+async def claim_next_job(worker_id: Optional[str] = Header(None)):
+    """Worker claims the next queued job."""
+    job = await db.jobs.find_one_and_update(
+        {"status": "queued"},
+        {
+            "$set": {
+                "status": "processing",
+                "worker_id": worker_id,
+                "started_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        sort=[("created_at", 1)],
+        return_document=ReturnDocument.AFTER
+    )
+
+    if not job:
+        return {"job": None}
+
+    return {
+        "job_id": job.get("job_id"),
+        "input_s3_key": job.get("input_s3_key"),
+        "output_s3_key": job.get("output_s3_key"),
+        "aspect_ratio": job.get("aspect_ratio"),
+        "preset_name": job.get("preset_name")
+    }
+
+
+@api_router.post("/jobs/{job_id}/complete")
+async def complete_job(job_id: str, request: JobCompleteRequest):
+    """Worker marks a job as completed and stores output key."""
+    result = await db.jobs.update_one(
+        {"job_id": job_id},
+        {
+            "$set": {
+                "status": "completed",
+                "output_s3_key": request.output_s3_key,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    await db.generations.update_one(
+        {"job_id": job_id},
+        {"$set": {"status": "completed"}}
+    )
+
+    return {"job_id": job_id, "status": "completed"}
+
+
+@api_router.post("/jobs/{job_id}/fail")
+async def fail_job(job_id: str, request: JobFailRequest):
+    """Worker marks a job as failed."""
+    result = await db.jobs.update_one(
+        {"job_id": job_id},
+        {
+            "$set": {
+                "status": "failed",
+                "error": request.error,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    await db.generations.update_one(
+        {"job_id": job_id},
+        {"$set": {"status": "failed"}}
+    )
+
+    return {"job_id": job_id, "status": "failed"}
+
+
+@api_router.get("/jobs/{job_id}")
+async def get_job_status(job_id: str):
+    """Return job status and signed URL when completed."""
+    job = await db.jobs.find_one({"job_id": job_id}, {"_id": 0})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    response = {
+        "job_id": job.get("job_id"),
+        "status": job.get("status"),
+        "output_s3_key": job.get("output_s3_key")
+    }
+
+    if job.get("status") == "completed" and s3_storage and job.get("output_s3_key"):
+        response["output_url"] = s3_storage.generate_signed_url(
+            job.get("output_s3_key"),
+            expires_in=SIGNED_URL_TTL
+        )
+
+    return response
 
 # ============== USER & CREDITS API ==============
 

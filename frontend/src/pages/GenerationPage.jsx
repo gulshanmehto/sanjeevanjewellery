@@ -23,6 +23,8 @@ const GenerationPage = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [jobId, setJobId] = useState(null);
+  const [jobStatus, setJobStatus] = useState(null);
 
   useEffect(() => {
     const checkImages = async () => {
@@ -46,6 +48,49 @@ const GenerationPage = () => {
     };
     getUploadedImage();
   }, []);
+
+  useEffect(() => {
+    if (!jobId) return;
+
+    let isActive = true;
+
+    const pollJobStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/jobs/${jobId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch job status");
+        }
+        const jobData = await response.json();
+        if (!isActive) return;
+
+        setJobStatus(jobData.status);
+
+        if (jobData.status === "completed" && jobData.output_url) {
+          setGeneratedImage(jobData.output_url);
+          setGenerationProgress(100);
+          setIsGenerating(false);
+          setJobId(null);
+          toast.success("Image upscaled successfully!");
+        }
+
+        if (jobData.status === "failed") {
+          setIsGenerating(false);
+          setJobId(null);
+          toast.error("Upscaling failed. Please try again.");
+        }
+      } catch (error) {
+        console.error("Job polling error:", error);
+      }
+    };
+
+    pollJobStatus();
+    const interval = setInterval(pollJobStatus, 4000);
+
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
+  }, [jobId]);
 
   const selectedCategory = sessionStorage.getItem("selected_category");
   const selectedPreset = sessionStorage.getItem("selected_preset");
@@ -78,6 +123,8 @@ const GenerationPage = () => {
         return prev + 10;
       });
     }, 500);
+
+    let keepGenerating = false;
 
     try {
       const base64Data = uploadedPreview.split(',')[1];
@@ -115,26 +162,39 @@ const GenerationPage = () => {
       }
 
       const data = await response.json();
-      setGenerationProgress(100);
-      setGeneratedImage(data.generated_image || data.image);
+
+      if (data.job_id) {
+        setJobId(data.job_id);
+        setJobStatus("processing");
+        setGenerationProgress(95);
+        keepGenerating = true;
+        toast.success("Queued for GPU upscaling...");
+      } else {
+        setGenerationProgress(100);
+        setGeneratedImage(data.generated_image || data.image);
+        toast.success("Image generated successfully!");
+      }
 
       if (updateCredits) {
         updateCredits(credits - 1);
       }
 
-      toast.success("Image generated successfully!");
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Generation error:", error);
       toast.error(error.message || "Failed to generate image");
     } finally {
-      setIsGenerating(false);
+      if (!keepGenerating) {
+        setIsGenerating(false);
+      }
     }
   };
 
   const handleRegenerate = () => {
     setGeneratedImage(null);
     setGenerationProgress(0);
+    setJobId(null);
+    setJobStatus(null);
   };
 
   const handleDownload = () => {

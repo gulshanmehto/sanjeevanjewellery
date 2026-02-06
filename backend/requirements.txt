@@ -22,6 +22,10 @@ Pillow==11.0.0  # Updated from older version - Image processing with JPEG optimi
 # Environment Configuration
 python-dotenv==1.0.1  # Updated from 1.0.0
 
+# AWS S3
+boto3==1.35.93
+botocore==1.35.93
+
 # CORS and Middleware
 starlette==0.41.3  # Updated from 0.27.0
 

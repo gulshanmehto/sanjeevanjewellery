@@ -1,0 +1,30 @@
+{
+  "Rules": [
+    {
+      "Id": "DeleteOldGeneratedImages",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "jewelai/jobs/"
+      },
+      "Expiration": {
+        "Days": 7
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 1
+      }
+    },
+    {
+      "Id": "TransitionToInfrequentAccess",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "jewelai/jobs/"
+      },
+      "Transitions": [
+        {
+          "Days": 3,
+          "StorageClass": "STANDARD_IA"
+        }
+      ]
+    }
+  ]
+}
