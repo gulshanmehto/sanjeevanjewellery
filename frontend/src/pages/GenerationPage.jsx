@@ -10,6 +10,8 @@ import { ASPECT_RATIOS } from "@/lib/aspectRatios";
 import { toast } from "sonner";
 import { getImageFromIndexedDB } from "@/utils/imageStorage";
 
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:32000';
+
 const GenerationPage = () => {
   const navigate = useNavigate();
   const { credits, updateCredits } = useAuth();
@@ -100,7 +102,7 @@ const GenerationPage = () => {
       formData.append('aspect_ratio_label', selectedRatio.label);
       formData.append('aspect_ratio_dimensions', selectedRatio.dimensions);
 
-      const response = await fetch("http://localhost:32000/api/generate", {
+      const response = await fetch(`${API_BASE_URL}/api/generate`, {
         method: "POST",
         body: formData,
       });
@@ -207,7 +209,7 @@ const GenerationPage = () => {
     try {
       const base64Data = generatedImage.split(',')[1];
 
-      const response = await fetch("http://localhost:32000/api/generate-video", {
+      const response = await fetch(`${API_BASE_URL}/api/generate-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
