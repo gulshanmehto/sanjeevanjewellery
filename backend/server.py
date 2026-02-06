@@ -604,17 +604,18 @@ async def admin_get_all_generations():
 app.include_router(api_router)
 
 # Configure CORS with secure defaults
-allowed_origins = os.environ.get(
-    'ALLOWED_ORIGINS', 
-    'http://localhost:31000,http://localhost:3000'
-).split(',')
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins == '*':
+    allowed_origins = ['*']
+else:
+    allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
+    allow_credentials=False if '*' in allowed_origins else True,
     allow_origins=allowed_origins,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "Accept"],
+    allow_headers=["*"],
     max_age=3600,
 )
 
