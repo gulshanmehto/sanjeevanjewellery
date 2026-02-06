@@ -222,6 +222,11 @@ No over-stylisation.
 async def root():
     return {"message": "JewelAI Studio API - v1.0"}
 
+@api_router.get("/ping")
+async def ping():
+    """Simple ping endpoint for health checks."""
+    return {"status": "pong", "timestamp": datetime.now(timezone.utc).isoformat()}
+
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
     status_dict = input.model_dump()
