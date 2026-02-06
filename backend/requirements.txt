@@ -1,0 +1,42 @@
+# FastAPI and Web Framework - Latest versions (February 2026)
+fastapi==0.115.6  # Updated from 0.104.1
+uvicorn[standard]==0.34.0  # Updated from 0.24.0
+pydantic==2.10.5  # Updated from 2.5.0
+pydantic-settings==2.7.1  # Updated from 2.1.0
+pydantic[email]==2.10.5  # Updated from 2.5.0
+
+# Database - Latest MongoDB drivers
+motor==3.7.0  # Updated from 3.3.2
+pymongo==4.10.1  # Updated from 4.6.0
+
+# Authentication and Security - Latest secure versions
+passlib[bcrypt]==1.7.4  # Still latest stable
+bcrypt==4.2.1  # Updated from 4.1.1
+PyJWT==2.10.1  # Updated from 2.8.1 - Critical security fixes
+python-multipart==0.0.20  # Updated from 0.0.6
+
+# AI and Image Processing (Cloud Run optimized - removed torch/realesrgan)
+google-generativeai==0.8.5  # Updated from 0.3.0 - Latest Gemini SDK
+Pillow==11.0.0  # Updated from older version - Image processing with JPEG optimization
+
+# Environment Configuration
+python-dotenv==1.0.1  # Updated from 1.0.0
+
+# CORS and Middleware
+starlette==0.41.3  # Updated from 0.27.0
+
+# Logging and Monitoring
+python-json-logger==3.2.1  # Updated from 2.0.7
+
+# Security - Rate Limiting and Additional Protection
+slowapi==0.1.9  # NEW: Rate limiting
+python-jose[cryptography]==3.3.0  # NEW: Enhanced JWT security
+email-validator==2.2.0  # NEW: Required for pydantic EmailStr
+
+# Testing
+pytest==8.3.4  # Updated from 7.4.3
+pytest-asyncio==0.24.0  # Updated from 0.21.1
+httpx==0.28.1  # Updated from 0.25.2
+
+# Production Server
+gunicorn==23.0.0  # NEW: Production-grade WSGI server

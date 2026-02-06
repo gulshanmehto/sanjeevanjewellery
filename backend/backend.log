@@ -1,0 +1,56 @@
+/Users/gulshan/Kleveer Jewellery Ai/backend/venv/lib/python3.9/site-packages/google/api_core/_python_version_support.py:246: FutureWarning: You are using a non-supported Python version (3.9.6). Google will not post any further updates to google.api_core supporting this Python version. Please upgrade to the latest Python version, or at least Python 3.10, and then update google.api_core.
+  warnings.warn(message, FutureWarning)
+/Users/gulshan/Kleveer Jewellery Ai/backend/venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+/Users/gulshan/Kleveer Jewellery Ai/backend/venv/lib/python3.9/site-packages/google/auth/__init__.py:54: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+/Users/gulshan/Kleveer Jewellery Ai/backend/venv/lib/python3.9/site-packages/google/oauth2/__init__.py:40: FutureWarning: You are using a Python version 3.9 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.
+  warnings.warn(eol_message.format("3.9"), FutureWarning)
+INFO:     Started server process [93523]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:32000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53727 - "GET /api/user/gulshanmehto%40gmail.com/credits HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53727 - "GET /api/user/gulshanmehto%40gmail.com/credits HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53730 - "GET /api/user/gulshanmehto%40gmail.com/credits HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53730 - "GET /api/user/gulshanmehto%40gmail.com/credits HTTP/1.1" 200 OK
+2026-02-06 16:08:21,934 - server - INFO - Received aspect_ratio: 9:13
+2026-02-06 16:08:21,935 - server - INFO - Received aspect_ratio_label: Portrait
+2026-02-06 16:08:21,935 - server - INFO - Received aspect_ratio_dimensions: 2160x3120
+2026-02-06 16:08:21,935 - server - INFO - Generating product shoot for earrings with preset: Rustic Wood Luxe
+2026-02-06 16:08:21,961 - server - INFO - Generating with exact dimensions: 1152x1664 (Portrait (9:13))
+2026-02-06 16:08:40,075 - server - INFO - Applying super-resolution 4x upscaling...
+2026-02-06 16:08:40,448 - services.super_resolution - INFO - Downloading Real-ESRGAN model to /Users/gulshan/.cache/realesrgan/RealESRGAN_x4plus.pth
+2026-02-06 16:08:40,448 - services.super_resolution - ERROR - Failed to initialize Real-ESRGAN: __init__() got an unexpected keyword argument 'upsampler'
+2026-02-06 16:08:41,195 - services.super_resolution - INFO - PIL upscale: (864, 1248) → (3456, 4992)
+2026-02-06 16:08:41,312 - server - INFO - Super-resolution complete. Image upscaled 4x with natural quality.
+INFO:     127.0.0.1:53746 - "POST /api/generate HTTP/1.1" 200 OK
+2026-02-06 16:09:08,398 - server - INFO - Received aspect_ratio: 32:9
+2026-02-06 16:09:08,399 - server - INFO - Received aspect_ratio_label: Ultra Wide
+2026-02-06 16:09:08,399 - server - INFO - Received aspect_ratio_dimensions: 4096x1152
+2026-02-06 16:09:08,399 - server - INFO - Generating product shoot for earrings with preset: Rustic Wood Luxe
+2026-02-06 16:09:08,404 - server - INFO - Generating with exact dimensions: 3840x1080 (Ultra Wide (32:9))
+2026-02-06 16:09:27,364 - server - INFO - Applying super-resolution 4x upscaling...
+2026-02-06 16:09:27,573 - services.super_resolution - INFO - PIL upscale: (1952, 544) → (7808, 2176)
+2026-02-06 16:09:27,686 - server - INFO - Super-resolution complete. Image upscaled 4x with natural quality.
+INFO:     127.0.0.1:53766 - "POST /api/generate HTTP/1.1" 200 OK
+2026-02-06 16:09:45,270 - server - INFO - Received aspect_ratio: 16:9
+2026-02-06 16:09:45,270 - server - INFO - Received aspect_ratio_label: Landscape
+2026-02-06 16:09:45,270 - server - INFO - Received aspect_ratio_dimensions: 3840x2160
+2026-02-06 16:09:45,271 - server - INFO - Generating product shoot for earrings with preset: Rustic Wood Luxe
+2026-02-06 16:09:45,272 - server - INFO - Generating with exact dimensions: 1920x1080 (Landscape (16:9))
+2026-02-06 16:10:02,026 - server - INFO - Applying super-resolution 4x upscaling...
+2026-02-06 16:10:02,238 - services.super_resolution - INFO - PIL upscale: (1376, 768) → (5504, 3072)
+2026-02-06 16:10:02,347 - server - INFO - Super-resolution complete. Image upscaled 4x with natural quality.
+INFO:     127.0.0.1:53774 - "POST /api/generate HTTP/1.1" 200 OK
+2026-02-06 16:10:45,239 - server - INFO - Received aspect_ratio: 9:13
+2026-02-06 16:10:45,240 - server - INFO - Received aspect_ratio_label: Portrait
+2026-02-06 16:10:45,240 - server - INFO - Received aspect_ratio_dimensions: 2160x3120
+2026-02-06 16:10:45,240 - server - INFO - Generating product shoot for necklace with preset: Minimal Sculptural Studio
+2026-02-06 16:10:45,241 - server - INFO - Generating with exact dimensions: 1152x1664 (Portrait (9:13))
+2026-02-06 16:11:13,606 - server - INFO - Applying super-resolution 4x upscaling...
+2026-02-06 16:11:13,815 - services.super_resolution - INFO - PIL upscale: (864, 1248) → (3456, 4992)
+2026-02-06 16:11:13,920 - server - INFO - Super-resolution complete. Image upscaled 4x with natural quality.
+INFO:     127.0.0.1:53790 - "POST /api/generate HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.

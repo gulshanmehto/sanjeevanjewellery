@@ -1,0 +1,173 @@
+/* App-specific styles that complement the design system */
+
+/* Smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+/* Image hover effects */
+.image-hover-zoom {
+  overflow: hidden;
+}
+
+.image-hover-zoom img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-hover-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* Staggered animations for lists */
+.stagger-item {
+  opacity: 0;
+  animation: staggerFadeIn 0.5s ease-out forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }
+.stagger-item:nth-child(7) { animation-delay: 0.35s; }
+.stagger-item:nth-child(8) { animation-delay: 0.4s; }
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Preset card image overlay */
+.preset-overlay {
+  background: linear-gradient(
+    to top,
+    hsl(var(--foreground) / 0.8) 0%,
+    hsl(var(--foreground) / 0.4) 30%,
+    transparent 70%
+  );
+}
+
+/* Dark mode preset overlay */
+.dark .preset-overlay {
+  background: linear-gradient(
+    to top,
+    hsl(0 0% 0% / 0.85) 0%,
+    hsl(0 0% 0% / 0.5) 30%,
+    transparent 70%
+  );
+}
+
+/* Jewellery type chip styling */
+.jewellery-chip {
+  transition: all 0.2s ease;
+}
+
+.jewellery-chip:hover {
+  transform: translateY(-1px);
+}
+
+.jewellery-chip.selected {
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.25);
+}
+
+/* Step indicator */
+.step-indicator {
+  position: relative;
+}
+
+.step-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 40px;
+  height: 2px;
+  background: hsl(var(--border));
+  transform: translateY(-50%);
+}
+
+.step-indicator:last-child::after {
+  display: none;
+}
+
+.step-indicator.completed::after {
+  background: hsl(var(--primary));
+}
+
+/* Generation loading state */
+.generation-pulse {
+  animation: generationPulse 2s ease-in-out infinite;
+}
+
+@keyframes generationPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 15px hsl(var(--primary) / 0);
+  }
+}
+
+/* Credit badge animation */
+.credit-badge {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.credit-badge:hover {
+  transform: scale(1.05);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  background: hsl(var(--foreground) / 0.3);
+}
+
+.dark .modal-backdrop {
+  background: hsl(0 0% 0% / 0.6);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, hsl(var(--gold) / 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-toggle:hover::before {
+  opacity: 1;
+}
